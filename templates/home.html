@@ -1,0 +1,143 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+  </script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+  </script>
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" />
+    <!-- 부트스트랩 데이트피커의 css파일 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js">
+    //   부트스트랩 데이트피커의 자바스크립트 파일
+  </script>
+  <script>
+    //   위에서 가져온 부트스트랩 데이트피커를 적용하는 곳
+    $(document).ready(function () {
+      $("#date").datepicker({});
+      // 데이트피커란 마우스를 위에 올려놓으면 날짜를 선택할 수 있는 테이블형태의 뷰를 띄워주는 것
+    });
+
+    function createTodo() {
+      $.ajax({
+        url: '/api/v1/todos',
+        contentType: 'application/json',
+        method: 'POST',
+        data: JSON.stringify({
+          // 데이터를 스트링파이를 통해서 전달해줌
+          title: $("#title").val(),
+          due: $("#date").val()
+        })
+      }).done(function (res) {
+        // 위의 처리가 완료가 되면 다시 폼컨트롤 창을 깨끗하게 비우기 위해서 
+        $("#title").val('');
+        $("#date").val('');
+
+        window.location = '/';
+      });
+    }
+
+    function doneTodo(todo_id) {
+      // 인자값으로 todo_id를 받았는데 그 아이디가 구별자 역할을 한다.
+      $.ajax({
+        url: '/api/v1/todos/done',
+        contentType: 'application/json',
+        method: 'PUT',
+        data: JSON.stringify({
+          // 데이터를 스트링파이를 통해서 전달해줌
+          todo_id: todo_id
+        })
+      }).done(function (res) {
+        window.location = '/';
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row mt-5">
+      <h1>Home</h1>
+    </div>
+    <div class="row mt-5">
+      <div class="col-12">
+        <ul class="nav">
+          {% if userid %}
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">로그아웃</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">{{ userid }}</a>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="/login">로그인</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/register">회원가입</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    <div class="row mt-5">
+      <h3>할일 생성</h3>
+      <div class="col-12">
+        <!-- 할일 제목 -->
+        <input type="text" class="form-control" id="title" placeholder="할일 제목" />
+      </div>
+      <div class="col-12 col-sm-7 mt-2">
+        <!-- 날짜 -->
+        <input type="text" class="form-control" id="date" placeholder="기한" />
+      </div>
+      <div class="col-12 col-sm-5 mt-2">
+        <!-- 확인 -->
+        <button type="button" class="btn btn-primary" onclick="createTodo();">생성</button>
+      </div>
+    </div>
+    <div class="row mt-5">
+      <h3>할일 목록</h3>
+      <div class="col-12">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">할일제목</th>
+              <th scope="col">기한</th>
+              <th scope="col">완료처리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for todo in todos %}
+            {% if todo.status %}
+            <tr>
+              <!-- del태그를 사용하게 되면 취소선이 나오게 됨 -->
+              <th scope="row"><del>{{ todo.id }}</del></th>
+              <td><del>{{ todo.title }}</del></td>
+              <td><del>{{ todo.due }}</del></td>
+              <td>완료</td>
+            </tr>
+            {% else %}
+            <tr>
+              <th scope="row">{{ todo.id }}</th>
+              <td>{{ todo.title }}</td>
+              <td>{{ todo.due }}</td>
+              <td><button type="button" class="btn btn-secondary" onclick="doneTodo({{ todo.id }});">완료</button></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
